@@ -3,6 +3,12 @@ use std::{process::Command, path::PathBuf};
 mod dsync;
 mod tsync;
 
+#[cfg(windows)]
+pub const YARN_COMMAND: &'static str = "yarn.cmd";
+
+#[cfg(not(windows))]
+pub const YARN_COMMAND: &'static str = "yarn";
+
 pub fn main() {
     if !create_rust_app::net::is_port_free(21012) {
         println!("========================================================");
@@ -17,7 +23,7 @@ pub fn main() {
     dsync::main();
     tsync::main();
 
-    Command::new("yarn")
+    Command::new(YARN_COMMAND)
         .arg("fullstack")
         .current_dir(PathBuf::from_iter([dir, "frontend"]))
         .spawn()

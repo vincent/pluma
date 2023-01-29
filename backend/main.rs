@@ -25,6 +25,9 @@ async fn main() -> std::io::Result<()> {
         app = app.app_data(Data::new(app_data.mailer.clone()));
         app = app.app_data(Data::new(app_data.storage.clone()));
 
+        let mut pub_scope = web::scope("/show");
+        pub_scope = pub_scope.service(services::public::endpoints(web::scope("/u")));
+
         let mut api_scope = web::scope("/api");
         api_scope = api_scope.service(services::file::endpoints(web::scope("/files")));
         api_scope = api_scope.service(create_rust_app::auth::endpoints(web::scope("/auth")));
@@ -39,6 +42,7 @@ async fn main() -> std::io::Result<()> {
             app = app.service(web::scope("/admin").service(Files::new("/", ".cargo/admin/dist/").index_file("admin.html")));
         }
 
+        app = app.service(pub_scope);
         app = app.service(api_scope);
         app = app.default_service(web::get().to(create_rust_app::render_views));
         app

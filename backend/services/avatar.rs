@@ -1,9 +1,10 @@
 use actix_multipart::Multipart;
 use actix_web::{HttpResponse, ResponseError};
 use actix_web::web::{Data, Path};
+use create_rust_app::auth::Auth;
+use futures_util::StreamExt;
 use serde::Serialize;
 use create_rust_app::{Attachment, AttachmentBlob, AttachmentData, Database, Storage};
-use futures_util::StreamExt as _;
 
 #[derive(Serialize)]
 #[tsync::tsync]
@@ -14,10 +15,11 @@ struct FileInfo {
     pub url: Option<String>,
 }
 
-#[actix_web::get("")]
-async fn all(db: Data<Database>, storage: Data<Storage>) -> HttpResponse {
+#[actix_web::get("/{owner_id}")]
+async fn all(db: Data<Database>, storage: Data<Storage>, auth: Auth) -> HttpResponse {
     let mut db = db.pool.get().unwrap();
-    let files = Attachment::find_all_for_record(&mut db, "file".to_string(), "NULL".to_string(), 0).unwrap_or_default();
+
+    let files = Attachment::find_all_for_record(&mut db, "avatar".to_string(), "users".to_string(), auth.user_id).unwrap_or_default();
     let blob_ids = files.iter().map(|f| f.blob_id).collect::<Vec<_>>();
     let blobs = AttachmentBlob::find_all_by_id(&mut db, blob_ids).unwrap_or_default();
 
